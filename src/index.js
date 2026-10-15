@@ -1,28 +1,23 @@
-
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import pool from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Seguridad básica del servidor
+// 1. MIDDLEWARES GLOBAL DE SEGURIDAD Y PARSEO (Siempre van primero)
 app.use(helmet());
+app.use(cors({ origin: 'http://localhost:3001' }));
 
-// Permitir solicitudes desde el frontend que configuraremos después
-app.use(cors({
-    origin: 'http://localhost:3001'
-}));
-
-// Permitir recibir datos JSON
+// IMPORTANTE: express.json() DEBE ir antes de las rutas
 app.use(express.json({ limit: '1mb' }));
 
-// Limitar solicitudes para reducir abusos
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 200,
@@ -30,7 +25,10 @@ app.use(rateLimit({
     legacyHeaders: false
 }));
 
-// Ruta inicial para comprobar que Express funciona
+// 2. RUTAS DE LA API (Se registran después de express.json)
+app.use('/api/auth', authRoutes);
+
+// Ruta base
 app.get('/', (req, res) => {
     res.status(200).json({
         mensaje: 'API REST AutoServi funcionando',
@@ -38,7 +36,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// Ruta para comprobar la conexión con PostgreSQL
+// Comprobar conexión a PostgreSQL
 app.get('/api/health', async (req, res) => {
     try {
         const resultado = await pool.query(
@@ -53,7 +51,6 @@ app.get('/api/health', async (req, res) => {
         });
     } catch (error) {
         console.error('Error al comprobar PostgreSQL:', error.message);
-
         res.status(500).json({
             estado: 'error',
             mensaje: 'No fue posible conectar con la base de datos'
@@ -61,7 +58,7 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
-// Iniciar el servidor
+// Iniciar servidor
 app.listen(PORT, () => {
     console.log(`API AutoServi ejecutándose en http://localhost:${PORT}`);
 });

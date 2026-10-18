@@ -1,13 +1,16 @@
 import { Router } from 'express';
 import { login,registrarUsuario } from '../controllers/authController.js';
-import { verificarToken } from '../middleware/authMiddleware.js';
+import verificarToken from '../middleware/authMiddleware.js';
 import { verificarRol } from '../middleware/rolMiddleware.js';
 
 const router = Router();
 
 // Ruta pública
 router.post('/login', login);
-router.post('/registro', registrarUsuario); 
+
+// Solo un administrador puede crear usuarios
+router.post('/registro', verificarToken, verificarRol('administrador'), registrarUsuario);
+
 // Ruta protegida (requiere token)
 router.get('/perfil', verificarToken, (req, res) => {
   res.json({

@@ -1,6 +1,10 @@
-import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import {
+    buscarUsuarioActivoPorCorreo,
+    buscarUsuarioPorCorreo,
+    crearUsuario
+} from '../servicios/authService.js';
 
 export const login = async (req, res) => {
   const { correo, password } = req.body;
@@ -10,13 +14,12 @@ export const login = async (req, res) => {
   }
 
   try {
-    const result = await pool.query('SELECT * FROM usuarios WHERE correo = $1 AND activo = true', [correo]);
-    
-    if (result.rows.length === 0) {
+    const usuario = await buscarUsuarioActivoPorCorreo(correo);
+
+    if (!usuario) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const usuario = result.rows[0];
     const passwordValido = await bcrypt.compare(password, usuario.password_hash);
 
     if (!passwordValido) {
@@ -61,25 +64,18 @@ export const registrarUsuario = async (req, res) => {
   }
 
   try {
-    // 1. Verificar si el correo ya existe
-    const usuarioExiste = await pool.query('SELECT * FROM usuarios WHERE correo = $1', [correo]);
-    if (usuarioExiste.rows.length > 0) {
+    const usuarioExiste = await buscarUsuarioPorCorreo(correo);
+    if (usuarioExiste) {
       return res.status(400).json({ error: 'El correo electrónico ya está registrado' });
     }
 
-    // 2. Encriptar contraseña
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-
-    // 3. Insertar nuevo usuario (activo = true)
-    const nuevoUsuario = await pool.query(
-      'INSERT INTO usuarios (nombre, correo, password_hash, rol, activo) VALUES ($1, $2, $3, $4, true) RETURNING id, nombre, correo, rol, activo',
-      [nombre, correo, passwordHash, rol]
-    );
+    const usuario = await crearUsuario({ nombre, correo, passwordHash, rol });
 
     return res.status(201).json({
       mensaje: 'Usuario registrado exitosamente',
-      usuario: nuevoUsuario.rows[0]
+      usuario
     });
   } catch (error) {
     console.error('Error en registro:', error);

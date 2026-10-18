@@ -45,11 +45,19 @@ export const login = async (req, res) => {
   }
 };
 
+const ROLES_VALIDOS = ['administrador', 'operador', 'consulta', 'auditor'];
+
 export const registrarUsuario = async (req, res) => {
   const { nombre, correo, password, rol } = req.body;
 
   if (!nombre || !correo || !password) {
     return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+
+  if (!ROLES_VALIDOS.includes(rol)) {
+    return res.status(400).json({
+      error: 'El rol es obligatorio y debe ser administrador, operador, consulta o auditor'
+    });
   }
 
   try {
@@ -63,13 +71,10 @@ export const registrarUsuario = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // 3. Asignar rol por defecto
-    const rolUsuario = rol || 'cliente';
-
-    // 4. Insertar nuevo usuario (activo = true)
+    // 3. Insertar nuevo usuario (activo = true)
     const nuevoUsuario = await pool.query(
       'INSERT INTO usuarios (nombre, correo, password_hash, rol, activo) VALUES ($1, $2, $3, $4, true) RETURNING id, nombre, correo, rol, activo',
-      [nombre, correo, passwordHash, rolUsuario]
+      [nombre, correo, passwordHash, rol]
     );
 
     return res.status(201).json({

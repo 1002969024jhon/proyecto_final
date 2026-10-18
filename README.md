@@ -1,6 +1,6 @@
 # AutoServi
 
-API REST para órdenes de mantenimiento automotriz. En este momento están listos el servidor, el esquema de base de datos y la autenticación con roles. Los módulos de clientes, vehículos, técnicos, repuestos, órdenes e inventario todavía no tienen endpoints.
+API REST para órdenes de mantenimiento automotriz. El servidor, la base de datos, la autenticación y los módulos del taller están organizados en tres capas: rutas, controladores y servicios.
 
 ## Qué hay implementado
 
@@ -9,6 +9,7 @@ API REST para órdenes de mantenimiento automotriz. En este momento están listo
 - Esquema de 9 tablas para el taller.
 - Usuarios de prueba.
 - Login con JWT, registro de usuarios y control de acceso por rol.
+- Capa de servicios: las consultas y la lógica de autenticación viven en `src/services`. Los controladores solo leen la petición y escriben la respuesta.
 
 ## Tecnologías
 
@@ -23,16 +24,26 @@ API REST para órdenes de mantenimiento automotriz. En este momento están listo
 
 ```text
 src/
-  index.js                         Servidor y middlewares globales
-  config/db.js                     Pool de PostgreSQL
-  controllers/authController.js    Login y registro
-  routes/authRoutes.js             Rutas de autenticación
-  middleware/authMiddleware.js     Verificación del JWT
-  middleware/rolMiddleware.js      Autorización por rol
+  index.js                  Servidor y middlewares globales
+  config/db.js              Pool de PostgreSQL
+  routes/                   Rutas y permisos por rol
+  controllers/              Petición HTTP y respuesta JSON
+  services/                 Consultas a PostgreSQL y lógica de negocio
+    authService.js          Login, hash, JWT y registro
+    clienteService.js
+    vehiculoService.js
+    tecnicoService.js
+    repuestoService.js
+    ordenService.js         Incluye la transacción de crear una orden
+    inventarioService.js
+    auditoriaService.js
+  middleware/               Token, roles y auditoría
 sql/
-  01_crear_tablas.sql              Creación de las 9 tablas
-  02_seed_data.sql                 Usuarios de prueba
+  01_crear_tablas.sql       Creación de las 9 tablas
+  02_seed_data.sql          Usuarios de prueba
 ```
+
+Una ruta llama a un controlador. El controlador llama a un servicio y traduce el resultado a un código HTTP. El servicio no conoce `req` ni `res`.
 
 ## Base de datos
 
@@ -94,7 +105,7 @@ npm run dev
 | `GET` | `/` | Público | Comprueba que la API responde |
 | `GET` | `/api/health` | Público | Comprueba la conexión con PostgreSQL |
 | `POST` | `/api/auth/login` | Público | Devuelve un JWT si las credenciales son válidas |
-| `POST` | `/api/auth/registro` | Público | Crea un usuario con contraseña hasheada |
+| `POST` | `/api/auth/registro` | Token y rol `administrador` | Crea un usuario con contraseña hasheada |
 | `GET` | `/api/auth/perfil` | Token | Devuelve los datos del usuario autenticado |
 | `GET` | `/api/auth/admin` | Token y rol `administrador` | Ruta de prueba del control por rol |
 
@@ -126,7 +137,7 @@ Content-Type: application/json
 }
 ```
 
-Si no se envía `rol`, el controlador intenta guardar `cliente`. Ese valor no está permitido por la tabla, así que el registro sin rol válido responde con error.
+El registro exige token de administrador. El `rol` es obligatorio y solo acepta `administrador`, `operador`, `consulta` o `auditor`. Si falta o es otro valor, responde 400.
 
 ## Usuarios de prueba
 

@@ -1,14 +1,8 @@
-import {
-    listarTecnicos,
-    obtenerTecnicoPorId,
-    crearTecnico as guardarTecnico,
-    actualizarTecnico as guardarCambiosTecnico,
-    desactivarTecnico as desactivarTecnicoEnBd
-} from '../servicios/tecnicoService.js';
+import * as tecnicoService from '../services/tecnicoService.js';
 
 export const getTecnicos = async (req, res) => {
     try {
-        const tecnicos = await listarTecnicos();
+        const tecnicos = await tecnicoService.listarTecnicos();
         res.json(tecnicos);
     } catch (error) {
         console.error('Error al listar técnicos:', error);
@@ -19,7 +13,7 @@ export const getTecnicos = async (req, res) => {
 export const getTecnicoById = async (req, res) => {
     const { id } = req.params;
     try {
-        const tecnico = await obtenerTecnicoPorId(id);
+        const tecnico = await tecnicoService.obtenerTecnicoPorId(id);
         if (!tecnico) {
             return res.status(404).json({ error: 'Técnico no encontrado.' });
         }
@@ -33,7 +27,7 @@ export const getTecnicoById = async (req, res) => {
 export const crearTecnico = async (req, res) => {
     const { codigo, nombre, especialidad } = req.body;
     try {
-        const tecnico = await guardarTecnico({ codigo, nombre, especialidad });
+        const tecnico = await tecnicoService.crearTecnico({ codigo, nombre, especialidad });
         res.status(201).json({
             mensaje: 'Técnico creado exitosamente.',
             tecnico
@@ -48,7 +42,7 @@ export const actualizarTecnico = async (req, res) => {
     const { id } = req.params;
     const { codigo, nombre, especialidad, activo } = req.body;
     try {
-        const tecnico = await guardarCambiosTecnico(id, { codigo, nombre, especialidad, activo });
+        const tecnico = await tecnicoService.actualizarTecnico(id, { codigo, nombre, especialidad, activo });
         if (!tecnico) {
             return res.status(404).json({ error: 'Técnico no encontrado para actualizar.' });
         }
@@ -65,7 +59,7 @@ export const actualizarTecnico = async (req, res) => {
 export const desactivarTecnico = async (req, res) => {
     const { id } = req.params;
     try {
-        const tecnico = await desactivarTecnicoEnBd(id);
+        const tecnico = await tecnicoService.desactivarTecnico(id);
         if (!tecnico) {
             return res.status(404).json({ error: 'Técnico no encontrado.' });
         }

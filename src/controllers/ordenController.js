@@ -1,8 +1,8 @@
-import { listarOrdenes, obtenerOrdenPorId, crearOrden as guardarOrden } from '../servicios/ordenService.js';
+import * as ordenService from '../services/ordenService.js';
 
 export const getOrdenes = async (req, res) => {
     try {
-        const ordenes = await listarOrdenes();
+        const ordenes = await ordenService.listarOrdenes();
         res.json(ordenes);
     } catch (error) {
         console.error(error);
@@ -13,7 +13,7 @@ export const getOrdenes = async (req, res) => {
 export const getOrdenById = async (req, res) => {
     const { id } = req.params;
     try {
-        const resultado = await obtenerOrdenPorId(id);
+        const resultado = await ordenService.obtenerOrdenPorId(id);
         if (!resultado) {
             return res.status(404).json({ error: 'Orden no encontrada.' });
         }
@@ -29,7 +29,7 @@ export const crearOrden = async (req, res) => {
     const usuario_id = req.usuario ? req.usuario.id : 1;
 
     try {
-        const { orden, detalles } = await guardarOrden({
+        const { orden, detalles } = await ordenService.crearOrden({
             vehiculo_id,
             tecnico_id,
             usuario_id,
@@ -38,8 +38,6 @@ export const crearOrden = async (req, res) => {
             mano_obra,
             repuestos
         });
-
-        req.auditData = { recurso: 'ordenes', recurso_id: orden.id, datos_nuevos: orden };
 
         res.status(201).json({
             mensaje: 'Orden creada exitosamente con número consecutivo.',

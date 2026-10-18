@@ -1,4 +1,4 @@
-import { listarAuditoria } from '../servicios/auditoriaService.js';
+import { listarAuditoria } from '../services/auditoriaService.js';
 
 const getAuditoria = async (req, res) => {
     try {

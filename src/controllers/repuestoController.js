@@ -1,14 +1,8 @@
-import {
-    listarRepuestos,
-    obtenerRepuestoPorId,
-    crearRepuesto as guardarRepuesto,
-    actualizarRepuesto as guardarCambiosRepuesto,
-    desactivarRepuesto as desactivarRepuestoEnBd
-} from '../servicios/repuestoService.js';
+import * as repuestoService from '../services/repuestoService.js';
 
 export const getRepuestos = async (req, res) => {
     try {
-        const repuestos = await listarRepuestos();
+        const repuestos = await repuestoService.listarRepuestos();
         res.json(repuestos);
     } catch (error) {
         console.error('Error al listar repuestos:', error);
@@ -19,7 +13,7 @@ export const getRepuestos = async (req, res) => {
 export const getRepuestoById = async (req, res) => {
     const { id } = req.params;
     try {
-        const repuesto = await obtenerRepuestoPorId(id);
+        const repuesto = await repuestoService.obtenerRepuestoPorId(id);
         if (!repuesto) {
             return res.status(404).json({ error: 'Repuesto no encontrado.' });
         }
@@ -33,7 +27,7 @@ export const getRepuestoById = async (req, res) => {
 export const crearRepuesto = async (req, res) => {
     const { codigo, nombre, descripcion, precio_unitario, stock, stock_minimo } = req.body;
     try {
-        const repuesto = await guardarRepuesto({ codigo, nombre, descripcion, precio_unitario, stock, stock_minimo });
+        const repuesto = await repuestoService.crearRepuesto({ codigo, nombre, descripcion, precio_unitario, stock, stock_minimo });
         res.status(201).json({
             mensaje: 'Repuesto creado exitosamente.',
             repuesto
@@ -48,7 +42,7 @@ export const actualizarRepuesto = async (req, res) => {
     const { id } = req.params;
     const { codigo, nombre, descripcion, precio_unitario, stock, stock_minimo, activo } = req.body;
     try {
-        const repuesto = await guardarCambiosRepuesto(id, {
+        const repuesto = await repuestoService.actualizarRepuesto(id, {
             codigo, nombre, descripcion, precio_unitario, stock, stock_minimo, activo
         });
         if (!repuesto) {
@@ -67,7 +61,7 @@ export const actualizarRepuesto = async (req, res) => {
 export const desactivarRepuesto = async (req, res) => {
     const { id } = req.params;
     try {
-        const repuesto = await desactivarRepuestoEnBd(id);
+        const repuesto = await repuestoService.desactivarRepuesto(id);
         if (!repuesto) {
             return res.status(404).json({ error: 'Repuesto no encontrado.' });
         }

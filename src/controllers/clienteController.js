@@ -1,14 +1,8 @@
-import {
-    listarClientes,
-    obtenerClientePorId,
-    crearCliente as guardarCliente,
-    actualizarCliente as guardarCambiosCliente,
-    desactivarCliente as desactivarClienteEnBd
-} from '../servicios/clienteService.js';
+import * as clienteService from '../services/clienteService.js';
 
 export const getClientes = async (req, res) => {
     try {
-        const clientes = await listarClientes();
+        const clientes = await clienteService.listarClientes();
         res.json(clientes);
     } catch (error) {
         console.error('Error al listar clientes:', error);
@@ -19,7 +13,7 @@ export const getClientes = async (req, res) => {
 export const getClienteById = async (req, res) => {
     const { id } = req.params;
     try {
-        const cliente = await obtenerClientePorId(id);
+        const cliente = await clienteService.obtenerClientePorId(id);
         if (!cliente) {
             return res.status(404).json({ error: 'Cliente no encontrado.' });
         }
@@ -33,7 +27,7 @@ export const getClienteById = async (req, res) => {
 export const crearCliente = async (req, res) => {
     const { documento, nombre, correo, telefono } = req.body;
     try {
-        const cliente = await guardarCliente({ documento, nombre, correo, telefono });
+        const cliente = await clienteService.crearCliente({ documento, nombre, correo, telefono });
         res.status(201).json({
             mensaje: 'Cliente creado exitosamente.',
             cliente
@@ -48,7 +42,7 @@ export const actualizarCliente = async (req, res) => {
     const { id } = req.params;
     const { documento, nombre, correo, telefono, activo } = req.body;
     try {
-        const cliente = await guardarCambiosCliente(id, { documento, nombre, correo, telefono, activo });
+        const cliente = await clienteService.actualizarCliente(id, { documento, nombre, correo, telefono, activo });
         if (!cliente) {
             return res.status(404).json({ error: 'Cliente no encontrado para actualizar.' });
         }
@@ -65,7 +59,7 @@ export const actualizarCliente = async (req, res) => {
 export const desactivarCliente = async (req, res) => {
     const { id } = req.params;
     try {
-        const cliente = await desactivarClienteEnBd(id);
+        const cliente = await clienteService.desactivarCliente(id);
         if (!cliente) {
             return res.status(404).json({ error: 'Cliente no encontrado.' });
         }

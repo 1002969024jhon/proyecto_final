@@ -1,4 +1,4 @@
-import { listarMovimientos } from '../servicios/inventarioService.js';
+import { listarMovimientos } from '../services/inventarioService.js';
 
 const getMovimientosInventario = async (req, res) => {
     try {

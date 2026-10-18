@@ -1,14 +1,8 @@
-import {
-    listarVehiculos,
-    obtenerVehiculoPorId,
-    crearVehiculo as guardarVehiculo,
-    actualizarVehiculo as guardarCambiosVehiculo,
-    desactivarVehiculo as desactivarVehiculoEnBd
-} from '../servicios/vehiculoService.js';
+import * as vehiculoService from '../services/vehiculoService.js';
 
 export const getVehiculos = async (req, res) => {
     try {
-        const vehiculos = await listarVehiculos();
+        const vehiculos = await vehiculoService.listarVehiculos();
         res.json(vehiculos);
     } catch (error) {
         console.error('Error al listar vehículos:', error);
@@ -19,7 +13,7 @@ export const getVehiculos = async (req, res) => {
 export const getVehiculoById = async (req, res) => {
     const { id } = req.params;
     try {
-        const vehiculo = await obtenerVehiculoPorId(id);
+        const vehiculo = await vehiculoService.obtenerVehiculoPorId(id);
         if (!vehiculo) {
             return res.status(404).json({ error: 'Vehículo no encontrado.' });
         }
@@ -33,7 +27,7 @@ export const getVehiculoById = async (req, res) => {
 export const crearVehiculo = async (req, res) => {
     const { placa, marca, modelo, anio, cliente_id, kilometraje, estado } = req.body;
     try {
-        const vehiculo = await guardarVehiculo({ placa, marca, modelo, anio, cliente_id, kilometraje, estado });
+        const vehiculo = await vehiculoService.crearVehiculo({ placa, marca, modelo, anio, cliente_id, kilometraje, estado });
         res.status(201).json({
             mensaje: 'Vehículo creado exitosamente.',
             vehiculo
@@ -48,7 +42,7 @@ export const updateVehiculo = async (req, res) => {
     const { id } = req.params;
     const { placa, marca, modelo, anio, cliente_id } = req.body;
     try {
-        const vehiculo = await guardarCambiosVehiculo(id, { placa, marca, modelo, anio, cliente_id });
+        const vehiculo = await vehiculoService.actualizarVehiculo(id, { placa, marca, modelo, anio, cliente_id });
         if (!vehiculo) {
             return res.status(404).json({ error: 'Vehículo no encontrado.' });
         }
@@ -62,7 +56,7 @@ export const updateVehiculo = async (req, res) => {
 export const deleteVehiculo = async (req, res) => {
     const { id } = req.params;
     try {
-        const vehiculo = await desactivarVehiculoEnBd(id);
+        const vehiculo = await vehiculoService.desactivarVehiculo(id);
         if (!vehiculo) {
             return res.status(404).json({ error: 'Vehículo no encontrado.' });
         }

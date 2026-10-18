@@ -1,14 +1,12 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
 const registrarAuditoria = (recurso) => {
   return async (req, res, next) => {
-    // Interceptamos la finalización de la respuesta HTTP
     const originalJson = res.json;
 
     res.json = function (data) {
-      // Solo auditar acciones de modificación exitosas (POST, PUT, DELETE)
       if (['POST', 'PUT', 'DELETE'].includes(req.method) && res.statusCode >= 200 && res.statusCode < 300) {
-        const usuarioId = req.usuario ? req.usuario.id : null;
+        const usuarioId = req.user ? req.user.id : null;
         const accion = req.method === 'POST' ? 'CREAR' : req.method === 'PUT' ? 'ACTUALIZAR' : 'ELIMINAR';
         const recursoId = req.params.id || (data && data.id ? String(data.id) : null);
 
@@ -37,4 +35,4 @@ const registrarAuditoria = (recurso) => {
   };
 };
 
-module.exports = registrarAuditoria;
+export default registrarAuditoria;

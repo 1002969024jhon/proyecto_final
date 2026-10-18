@@ -5,6 +5,13 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import pool from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import clienteRoutes from './routes/clienteRoutes.js';
+import vehiculoRoutes from './routes/vehiculoRoutes.js';
+import repuestoRoutes from './routes/repuestoRoutes.js';
+import tecnicoRoutes from './routes/tecnicoRoutes.js';
+import ordenRoutes from './routes/ordenRoutes.js';
+import inventarioRoutes from './routes/inventarioRoutes.js';
+import auditoriaRoutes from './routes/auditoriaRoutes.js';
 
 dotenv.config();
 
@@ -27,6 +34,13 @@ app.use(rateLimit({
 
 // 2. RUTAS DE LA API (Se registran después de express.json)
 app.use('/api/auth', authRoutes);
+app.use('/api/clientes', clienteRoutes);
+app.use('/api/vehiculos', vehiculoRoutes);
+app.use('/api/repuestos', repuestoRoutes);
+app.use('/api/tecnicos', tecnicoRoutes);
+app.use('/api/ordenes', ordenRoutes);
+app.use('/api/movimientos-inventario', inventarioRoutes);
+app.use('/api/auditoria', auditoriaRoutes)
 
 // Ruta base
 app.get('/', (req, res) => {

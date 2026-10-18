@@ -14,11 +14,8 @@ const router = express.Router();
 
 router.get('/', verifyToken, verificarRol('administrador', 'operador', 'consulta', 'auditor'), getRepuestos);
 router.get('/:id', verifyToken, verificarRol('administrador', 'operador', 'consulta', 'auditor'), getRepuestoById);
-
 router.post('/', verifyToken, verificarRol('administrador', 'operador'), registrarAuditoria('repuestos'), crearRepuesto);
 router.put('/:id', verifyToken, verificarRol('administrador', 'operador'), registrarAuditoria('repuestos'), actualizarRepuesto);
-
-// Solo administrador puede desactivar repuestos
 router.delete('/:id', verifyToken, verificarRol('administrador'), registrarAuditoria('repuestos'), desactivarRepuesto);
 
 export default router;

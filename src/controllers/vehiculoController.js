@@ -68,7 +68,8 @@ export const updateVehiculo = async (req, res) => {
 export const deleteVehiculo = async (req, res) => {
     const { id } = req.params;
     try {
-        // En lugar de cambiar el estado a un texto no permitido, ponemos activo en false
+       
+        
         const resultado = await pool.query(
             'UPDATE vehiculos SET activo = false WHERE id = $1 RETURNING *',
             [id]

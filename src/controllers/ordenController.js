@@ -1,4 +1,5 @@
 import * as ordenService from '../services/ordenService.js';
+import { responderErrorBd } from '../utils/erroresHttp.js';
 
 export const getOrdenes = async (req, res) => {
     try {
@@ -6,8 +7,7 @@ export const getOrdenes = async (req, res) => {
         const ordenes = await ordenService.listarOrdenes(req.query);
         res.json(ordenes);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al consultar las órdenes.' });
+        return responderErrorBd(res, error, 'Error al consultar las órdenes.');
     }
 };
 
@@ -20,8 +20,7 @@ export const getOrdenById = async (req, res) => {
         }
         res.json(resultado);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al consultar el detalle de la orden.' });
+        return responderErrorBd(res, error, 'Error al consultar el detalle de la orden.');
     }
 };
 
@@ -51,7 +50,11 @@ export const crearOrden = async (req, res) => {
             detalles
         });
     } catch (error) {
+        if (error.code) {
+            return responderErrorBd(res, error, 'Error al procesar la orden transaccional.');
+        }
+
         console.error('Error transaccional en orden (ROLLBACK ejecutado):', error.message);
-        res.status(400).json({ error: error.message || 'Error al procesar la orden transaccional.' });
+        return res.status(400).json({ error: error.message || 'Error al procesar la orden transaccional.' });
     }
 };

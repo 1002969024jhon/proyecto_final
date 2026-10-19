@@ -1,12 +1,12 @@
 import { iniciarSesion, registrarCuenta, ErrorSolicitud } from '../services/authService.js';
+import { responderErrorBd } from '../utils/erroresHttp.js';
 
 const responderError = (res, error, mensajeInterno) => {
     if (error instanceof ErrorSolicitud) {
         return res.status(error.status).json({ error: error.message });
     }
 
-    console.error(mensajeInterno, error);
-    return res.status(500).json({ error: mensajeInterno });
+    return responderErrorBd(res, error, mensajeInterno);
 };
 
 export const login = async (req, res) => {

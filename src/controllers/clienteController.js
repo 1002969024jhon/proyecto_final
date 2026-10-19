@@ -1,13 +1,13 @@
 import * as clienteService from '../services/clienteService.js';
 import pool from '../config/db.js';
+import { responderErrorBd } from '../utils/erroresHttp.js';
 
 export const getClientes = async (req, res) => {
     try {
         const clientes = await clienteService.listarClientes(req.query);
         res.json(clientes);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al consultar los clientes.' });
+        return responderErrorBd(res, error, 'Error al consultar los clientes.');
     }
 };
 
@@ -20,8 +20,7 @@ export const getClienteById = async (req, res) => {
         }
         res.json(cliente);
     } catch (error) {
-        console.error('Error al buscar cliente:', error);
-        res.status(500).json({ error: 'Error interno al buscar el cliente.' });
+        return responderErrorBd(res, error, 'Error interno al buscar el cliente.');
     }
 };
 
@@ -34,8 +33,7 @@ export const crearCliente = async (req, res) => {
             cliente
         });
     } catch (error) {
-        console.error('Error al crear cliente:', error);
-        res.status(500).json({ error: 'Error interno al crear el cliente.' });
+        return responderErrorBd(res, error, 'Error interno al crear el cliente.');
     }
 };
 
@@ -52,8 +50,7 @@ export const actualizarCliente = async (req, res) => {
             cliente
         });
     } catch (error) {
-        console.error('Error al actualizar cliente:', error);
-        res.status(500).json({ error: 'Error interno al actualizar el cliente.' });
+        return responderErrorBd(res, error, 'Error interno al actualizar el cliente.');
     }
 };
 
@@ -84,7 +81,6 @@ export const desactivarCliente = async (req, res) => {
 
         res.json({ mensaje: "Cliente desactivado exitosamente.", cliente: result.rows[0] });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Error al desactivar el cliente." });
+        return responderErrorBd(res, error, 'Error al desactivar el cliente.');
     }
 };

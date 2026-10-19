@@ -1,13 +1,13 @@
 import * as vehiculoService from '../services/vehiculoService.js';
 import pool from '../config/db.js';
+import { responderErrorBd } from '../utils/erroresHttp.js';
 
 export const getVehiculos = async (req, res) => {
     try {
         const vehiculos = await vehiculoService.listarVehiculos(req.query);
         res.json(vehiculos);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al consultar los vehículos.' });
+        return responderErrorBd(res, error, 'Error al consultar los vehículos.');
     }
 };
 
@@ -20,8 +20,7 @@ export const getVehiculoById = async (req, res) => {
         }
         res.json(vehiculo);
     } catch (error) {
-        console.error('Error al obtener vehículo:', error);
-        res.status(500).json({ error: 'Error interno del servidor.' });
+        return responderErrorBd(res, error, 'Error interno del servidor.');
     }
 };
 
@@ -34,8 +33,7 @@ export const crearVehiculo = async (req, res) => {
             vehiculo
         });
     } catch (error) {
-        console.error('Error al crear vehículo:', error);
-        res.status(500).json({ error: 'Error interno al crear el vehículo.' });
+        return responderErrorBd(res, error, 'Error interno al crear el vehículo.');
     }
 };
 
@@ -49,8 +47,7 @@ export const updateVehiculo = async (req, res) => {
         }
         res.json(vehiculo);
     } catch (error) {
-        console.error('Error al actualizar vehículo:', error);
-        res.status(500).json({ error: 'Error interno al actualizar el vehículo.', detalle: error.message });
+        return responderErrorBd(res, error, 'Error interno al actualizar el vehículo.');
     }
 };
 
@@ -81,7 +78,6 @@ export const deleteVehiculo = async (req, res) => {
 
         res.json({ mensaje: "Vehículo desactivado correctamente", vehiculo: result.rows[0] });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Error al desactivar el vehículo." });
+        return responderErrorBd(res, error, 'Error al desactivar el vehículo.');
     }
 };

@@ -1,12 +1,12 @@
 import * as repuestoService from '../services/repuestoService.js';
+import { responderErrorBd } from '../utils/erroresHttp.js';
 
 export const getRepuestos = async (req, res) => {
     try {
         const repuestos = await repuestoService.listarRepuestos(req.query);
         res.json(repuestos);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al consultar los repuestos.' });
+        return responderErrorBd(res, error, 'Error al consultar los repuestos.');
     }
 };
 
@@ -19,8 +19,7 @@ export const getRepuestoById = async (req, res) => {
         }
         res.json(repuesto);
     } catch (error) {
-        console.error('Error al buscar repuesto:', error);
-        res.status(500).json({ error: 'Error interno al buscar el repuesto.' });
+        return responderErrorBd(res, error, 'Error interno al buscar el repuesto.');
     }
 };
 
@@ -33,8 +32,7 @@ export const crearRepuesto = async (req, res) => {
             repuesto
         });
     } catch (error) {
-        console.error('Error al crear repuesto:', error);
-        res.status(500).json({ error: 'Error interno al crear el repuesto.' });
+        return responderErrorBd(res, error, 'Error interno al crear el repuesto.');
     }
 };
 
@@ -53,8 +51,7 @@ export const actualizarRepuesto = async (req, res) => {
             repuesto
         });
     } catch (error) {
-        console.error('Error al actualizar repuesto:', error);
-        res.status(500).json({ error: 'Error interno al actualizar el repuesto.' });
+        return responderErrorBd(res, error, 'Error interno al actualizar el repuesto.');
     }
 };
 
@@ -70,7 +67,6 @@ export const desactivarRepuesto = async (req, res) => {
             repuesto
         });
     } catch (error) {
-        console.error('Error al desactivar repuesto:', error);
-        res.status(500).json({ error: 'Error interno al desactivar el repuesto.' });
+        return responderErrorBd(res, error, 'Error interno al desactivar el repuesto.');
     }
 };

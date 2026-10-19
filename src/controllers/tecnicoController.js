@@ -1,12 +1,12 @@
 import * as tecnicoService from '../services/tecnicoService.js';
+import { responderErrorBd } from '../utils/erroresHttp.js';
 
 export const getTecnicos = async (req, res) => {
     try {
         const tecnicos = await tecnicoService.listarTecnicos(req.query);
         res.json(tecnicos);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al consultar los técnicos.' });
+        return responderErrorBd(res, error, 'Error al consultar los técnicos.');
     }
 };
 
@@ -19,8 +19,7 @@ export const getTecnicoById = async (req, res) => {
         }
         res.json(tecnico);
     } catch (error) {
-        console.error('Error al buscar técnico:', error);
-        res.status(500).json({ error: 'Error interno al buscar el técnico.' });
+        return responderErrorBd(res, error, 'Error interno al buscar el técnico.');
     }
 };
 
@@ -33,8 +32,7 @@ export const crearTecnico = async (req, res) => {
             tecnico
         });
     } catch (error) {
-        console.error('Error al crear técnico:', error);
-        res.status(500).json({ error: 'Error interno al crear el técnico.' });
+        return responderErrorBd(res, error, 'Error interno al crear el técnico.');
     }
 };
 
@@ -51,8 +49,7 @@ export const actualizarTecnico = async (req, res) => {
             tecnico
         });
     } catch (error) {
-        console.error('Error al actualizar técnico:', error);
-        res.status(500).json({ error: 'Error interno al actualizar el técnico.' });
+        return responderErrorBd(res, error, 'Error interno al actualizar el técnico.');
     }
 };
 
@@ -68,7 +65,6 @@ export const desactivarTecnico = async (req, res) => {
             tecnico
         });
     } catch (error) {
-        console.error('Error al desactivar técnico:', error);
-        res.status(500).json({ error: 'Error interno al desactivar el técnico.' });
+        return responderErrorBd(res, error, 'Error interno al desactivar el técnico.');
     }
 };

@@ -1,12 +1,31 @@
 import pool from '../config/db.js';
 
-export const listarVehiculos = async () => {
-    const result = await pool.query(`
+export const listarVehiculos = async (filtros = {}) => {
+    let query = `
         SELECT v.*, c.nombre AS cliente_nombre, c.documento AS cliente_documento
         FROM vehiculos v
-        JOIN clientes c ON v.cliente_id = c.id
-        ORDER BY v.id DESC
-    `);
+        LEFT JOIN clientes c ON v.cliente_id = c.id
+        WHERE 1=1
+    `;
+    const values = [];
+    let paramIndex = 1;
+
+    const columnasValidas = ['placa', 'marca', 'modelo', 'cliente_id', 'activo'];
+
+    for (const [key, value] of Object.entries(filtros)) {
+        if (value !== undefined && value !== '' && columnasValidas.includes(key)) {
+            if (key === 'cliente_id' || key === 'activo') {
+                query += ` AND v.${key} = $${paramIndex++}`;
+                values.push(value);
+            } else {
+                query += ` AND v.${key} ILIKE $${paramIndex++}`;
+                values.push(`%${value}%`);
+            }
+        }
+    }
+
+    query += ` ORDER BY v.id DESC`;
+    const result = await pool.query(query, values);
     return result.rows;
 };
 

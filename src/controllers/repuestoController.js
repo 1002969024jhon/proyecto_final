@@ -2,11 +2,11 @@ import * as repuestoService from '../services/repuestoService.js';
 
 export const getRepuestos = async (req, res) => {
     try {
-        const repuestos = await repuestoService.listarRepuestos();
+        const repuestos = await repuestoService.listarRepuestos(req.query);
         res.json(repuestos);
     } catch (error) {
-        console.error('Error al listar repuestos:', error);
-        res.status(500).json({ error: 'Error interno al listar repuestos.' });
+        console.error(error);
+        res.status(500).json({ error: 'Error al consultar los repuestos.' });
     }
 };
 

@@ -1,7 +1,20 @@
 import pool from '../config/db.js';
 
-export const listarRepuestos = async () => {
-    const result = await pool.query('SELECT * FROM repuestos ORDER BY id DESC');
+export const listarRepuestos = async (filtros = {}) => {
+    let query = `SELECT * FROM repuestos WHERE 1=1`;
+    const values = [];
+    let paramIndex = 1;
+    const columnasValidas = ['nombre', 'codigo'];
+
+    for (const [key, value] of Object.entries(filtros)) {
+        if (value && columnasValidas.includes(key)) {
+            query += ` AND ${key} ILIKE $${paramIndex++}`;
+            values.push(`%${value}%`);
+        }
+    }
+
+    query += ` ORDER BY id DESC`;
+    const result = await pool.query(query, values);
     return result.rows;
 };
 

@@ -1,7 +1,26 @@
 import pool from '../config/db.js';
 
-export const listarClientes = async () => {
-    const result = await pool.query('SELECT * FROM clientes ORDER BY id DESC');
+export const listarClientes = async (filtros = {}) => {
+    let query = `SELECT * FROM clientes WHERE 1=1`;
+    const values = [];
+    let paramIndex = 1;
+    
+    const columnasValidas = ['documento', 'nombre', 'correo', 'telefono', 'activo'];
+
+    for (const [key, value] of Object.entries(filtros)) {
+        if (value !== undefined && value !== '' && columnasValidas.includes(key)) {
+            if (key === 'activo') {
+                query += ` AND activo = $${paramIndex++}`;
+                values.push(value === 'true' || value === true);
+            } else {
+                query += ` AND ${key} ILIKE $${paramIndex++}`;
+                values.push(`%${value}%`);
+            }
+        }
+    }
+
+    query += ` ORDER BY id DESC`;
+    const result = await pool.query(query, values);
     return result.rows;
 };
 

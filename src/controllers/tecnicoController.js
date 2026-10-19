@@ -2,11 +2,11 @@ import * as tecnicoService from '../services/tecnicoService.js';
 
 export const getTecnicos = async (req, res) => {
     try {
-        const tecnicos = await tecnicoService.listarTecnicos();
+        const tecnicos = await tecnicoService.listarTecnicos(req.query);
         res.json(tecnicos);
     } catch (error) {
-        console.error('Error al listar técnicos:', error);
-        res.status(500).json({ error: 'Error interno al listar técnicos.' });
+        console.error(error);
+        res.status(500).json({ error: 'Error al consultar los técnicos.' });
     }
 };
 

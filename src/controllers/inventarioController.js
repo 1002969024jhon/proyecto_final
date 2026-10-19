@@ -1,13 +1,11 @@
-import { listarMovimientos } from '../services/inventarioService.js';
+import * as inventarioService from '../services/inventarioService.js';
 
-const getMovimientosInventario = async (req, res) => {
+export const getMovimientos = async (req, res) => {
     try {
-        const movimientos = await listarMovimientos();
+        const movimientos = await inventarioService.listarMovimientos(req.query);
         res.json(movimientos);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Error al consultar los movimientos de inventario.' });
+        res.status(500).json({ error: 'Error al consultar los movimientos.' });
     }
 };
-
-export { getMovimientosInventario };

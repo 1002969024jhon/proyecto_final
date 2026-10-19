@@ -1,12 +1,13 @@
 import * as clienteService from '../services/clienteService.js';
+import pool from '../config/db.js';
 
 export const getClientes = async (req, res) => {
     try {
-        const clientes = await clienteService.listarClientes();
+        const clientes = await clienteService.listarClientes(req.query);
         res.json(clientes);
     } catch (error) {
-        console.error('Error al listar clientes:', error);
-        res.status(500).json({ error: 'Error interno al listar clientes.' });
+        console.error(error);
+        res.status(500).json({ error: 'Error al consultar los clientes.' });
     }
 };
 
@@ -59,16 +60,31 @@ export const actualizarCliente = async (req, res) => {
 export const desactivarCliente = async (req, res) => {
     const { id } = req.params;
     try {
-        const cliente = await clienteService.desactivarCliente(id);
-        if (!cliente) {
-            return res.status(404).json({ error: 'Cliente no encontrado.' });
+        // 1. Validar si el cliente tiene vehículos asociados con órdenes activas
+        const vehiculosAsociados = await pool.query(
+            "SELECT v.id FROM vehiculos v JOIN ordenes o ON v.id = o.vehiculo_id WHERE v.cliente_id = $1 AND o.estado = 'abierta'",
+            [id]
+        );
+
+        if (vehiculosAsociados.rows.length > 0) {
+            return res.status(400).json({ 
+                error: "No se puede desactivar el cliente porque tiene vehículos con órdenes de mantenimiento abiertas." 
+            });
         }
-        res.json({
-            mensaje: 'Cliente desactivado exitosamente.',
-            cliente
-        });
+
+        // 2. Si no tiene restricciones, se procede con el Soft Delete
+        const result = await pool.query(
+            "UPDATE clientes SET activo = false WHERE id = $1 RETURNING *",
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Cliente no encontrado." });
+        }
+
+        res.json({ mensaje: "Cliente desactivado exitosamente.", cliente: result.rows[0] });
     } catch (error) {
-        console.error('Error al desactivar cliente:', error);
-        res.status(500).json({ error: 'Error interno al desactivar el cliente.' });
+        console.error(error);
+        res.status(500).json({ error: "Error al desactivar el cliente." });
     }
 };

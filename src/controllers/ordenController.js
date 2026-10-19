@@ -2,7 +2,8 @@ import * as ordenService from '../services/ordenService.js';
 
 export const getOrdenes = async (req, res) => {
     try {
-        const ordenes = await ordenService.listarOrdenes();
+        
+        const ordenes = await ordenService.listarOrdenes(req.query);
         res.json(ordenes);
     } catch (error) {
         console.error(error);
@@ -28,6 +29,9 @@ export const crearOrden = async (req, res) => {
     const { vehiculo_id, tecnico_id, descripcion, tipo, mano_obra, repuestos } = req.body;
     const usuario_id = req.usuario ? req.usuario.id : 1;
 
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '::1';
+    const user_agent = req.headers['user-agent'] || 'PostmanRuntime';
+
     try {
         const { orden, detalles } = await ordenService.crearOrden({
             vehiculo_id,
@@ -36,7 +40,9 @@ export const crearOrden = async (req, res) => {
             descripcion,
             tipo,
             mano_obra,
-            repuestos
+            repuestos,
+            ip,
+            user_agent
         });
 
         res.status(201).json({

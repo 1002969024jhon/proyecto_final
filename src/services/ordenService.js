@@ -1,14 +1,31 @@
 import pool from '../config/db.js';
 
-export const listarOrdenes = async () => {
-    const result = await pool.query(`
+export const listarOrdenes = async (filtros = {}) => {
+    let query = `
         SELECT o.*, v.placa AS vehiculo_placa, t.nombre AS tecnico_nombre, u.nombre AS usuario_nombre
         FROM ordenes o
         JOIN vehiculos v ON o.vehiculo_id = v.id
         JOIN tecnicos t ON o.tecnico_id = t.id
         JOIN usuarios u ON o.usuario_id = u.id
-        ORDER BY o.id DESC
-    `);
+        WHERE 1=1
+    `;
+    const values = [];
+    let paramIndex = 1;
+
+    // Lista de columnas permitidas en la tabla ordenes para mayor seguridad
+    const columnasValidas = ['estado', 'tipo', 'vehiculo_id', 'tecnico_id', 'usuario_id', 'numero'];
+
+    // Recorremos dinámicamente cada filtro que venga en la URL
+    for (const [key, value] of Object.entries(filtros)) {
+        if (value && columnasValidas.includes(key)) {
+            query += ` AND o.${key} = $${paramIndex++}`;
+            values.push(value);
+        }
+    }
+
+    query += ` ORDER BY o.id DESC`;
+
+    const result = await pool.query(query, values);
     return result.rows;
 };
 
@@ -39,11 +56,40 @@ export const obtenerOrdenPorId = async (id) => {
     };
 };
 
-export const crearOrden = async ({ vehiculo_id, tecnico_id, usuario_id, descripcion, tipo, mano_obra, repuestos }) => {
+export const crearOrden = async ({ 
+    vehiculo_id, 
+    tecnico_id, 
+    usuario_id, 
+    descripcion, 
+    tipo, 
+    mano_obra, 
+    repuestos,
+    ip = '::1',
+    user_agent = 'PostmanRuntime'
+}) => {
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
+
+        // 1. Validar que el array de repuestos sea válido
+        if (!repuestos || !Array.isArray(repuestos) || repuestos.length === 0) {
+            throw new Error('La orden debe incluir un array de repuestos válido.');
+        }
+
+        // 2. Validar que el vehículo exista en la base de datos
+        const vehiculoRes = await client.query('SELECT id FROM vehiculos WHERE id = $1', [vehiculo_id]);
+        if (vehiculoRes.rows.length === 0) {
+            throw new Error(`El vehículo con ID ${vehiculo_id} no existe.`);
+        }
+
+        // 3. Validar que el técnico exista en la base de datos
+        const tecnicoRes = await client.query('SELECT id FROM tecnicos WHERE id = $1', [tecnico_id]);
+        if (tecnicoRes.rows.length === 0) {
+            throw new Error(`El técnico con ID ${tecnico_id} no existe.`);
+        }
+
+        
 
         const ultimoRes = await client.query('SELECT id FROM ordenes ORDER BY id DESC LIMIT 1');
         const siguienteId = ultimoRes.rows.length > 0 ? ultimoRes.rows[0].id + 1 : 1;
@@ -52,42 +98,40 @@ export const crearOrden = async ({ vehiculo_id, tecnico_id, usuario_id, descripc
         let totalRepuestosCalculado = 0;
         const detallesCalculados = [];
 
-        if (repuestos && repuestos.length > 0) {
-            for (const item of repuestos) {
-                const { repuesto_id, cantidad } = item;
+        for (const item of repuestos) {
+            const { repuesto_id, cantidad } = item;
 
-                if (!cantidad || cantidad <= 0) {
-                    throw new Error(`La cantidad para el repuesto ID ${repuesto_id} debe ser mayor a cero.`);
-                }
-
-                const repuestoRes = await client.query(
-                    'SELECT id, precio_unitario, stock FROM repuestos WHERE id = $1 FOR UPDATE',
-                    [repuesto_id]
-                );
-
-                if (repuestoRes.rows.length === 0) {
-                    throw new Error(`El repuesto con ID ${repuesto_id} no existe.`);
-                }
-
-                const repuesto = repuestoRes.rows[0];
-
-                if (repuesto.stock < cantidad) {
-                    throw new Error(`Stock insuficiente para el repuesto ID ${repuesto_id}. Stock actual: ${repuesto.stock}, solicitado: ${cantidad}`);
-                }
-
-                const precio_unitario = Number(repuesto.precio_unitario);
-                const subtotal = precio_unitario * cantidad;
-                totalRepuestosCalculado += subtotal;
-
-                detallesCalculados.push({
-                    repuesto_id,
-                    cantidad,
-                    precio_unitario,
-                    subtotal,
-                    stock_antes: repuesto.stock,
-                    stock_despues: repuesto.stock - cantidad
-                });
+            if (!cantidad || cantidad <= 0) {
+                throw new Error(`La cantidad para el repuesto ID ${repuesto_id} debe ser mayor a cero.`);
             }
+
+            const repuestoRes = await client.query(
+                'SELECT id, precio_unitario, stock FROM repuestos WHERE id = $1 FOR UPDATE',
+                [repuesto_id]
+            );
+
+            if (repuestoRes.rows.length === 0) {
+                throw new Error(`El repuesto con ID ${repuesto_id} no existe.`);
+            }
+
+            const repuesto = repuestoRes.rows[0];
+
+            if (repuesto.stock < cantidad) {
+                throw new Error(`Stock insuficiente para el repuesto ID ${repuesto_id}. Stock actual: ${repuesto.stock}, solicitado: ${cantidad}`);
+            }
+
+            const precio_unitario = Number(repuesto.precio_unitario);
+            const subtotal = precio_unitario * cantidad;
+            totalRepuestosCalculado += subtotal;
+
+            detallesCalculados.push({
+                repuesto_id,
+                cantidad,
+                precio_unitario,
+                subtotal,
+                stock_antes: repuesto.stock,
+                stock_despues: repuesto.stock - cantidad
+            });
         }
 
         const manoObraValor = Number(mano_obra || 0);
@@ -127,6 +171,35 @@ export const crearOrden = async ({ vehiculo_id, tecnico_id, usuario_id, descripc
                 ]
             );
         }
+
+        await client.query(
+            `INSERT INTO auditoria (
+                usuario_id, 
+                accion, 
+                metodo, 
+                ruta, 
+                recurso, 
+                recurso_id, 
+                datos_nuevos, 
+                codigo_http, 
+                ip, 
+                user_agent, 
+                fecha
+            )
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+            [
+                usuario_id,
+                'CREAR',
+                'POST',
+                '/api/ordenes',
+                'ordenes',
+                String(nuevaOrden.id),
+                JSON.stringify(nuevaOrden),
+                201,
+                ip,
+                user_agent
+            ]
+        );
 
         await client.query('COMMIT');
         return { orden: nuevaOrden, detalles: detallesCalculados };

@@ -1,11 +1,11 @@
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Máximo 100 peticiones por ventana por IP
-  message: { error: 'Demasiadas peticiones desde esta IP, intente más tarde' },
-  standardHeaders: true,
-  legacyHeaders: false,
+export const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        error: 'Demasiados intentos de inicio de sesión. Intente de nuevo en 15 minutos'
+    }
 });
-
-module.exports = apiLimiter;

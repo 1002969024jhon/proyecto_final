@@ -24,6 +24,10 @@ export const responderErrorBd = (res, error, mensajeInterno) => {
         return res.status(409).json({ error: mensaje });
     }
 
+    if (error.code === 'P0001') {
+        return res.status(400).json({ error: 'No se puede modificar una orden finalizada' });
+    }
+
     if (CODIGOS_DATOS_INVALIDOS.has(error.code)) {
         return res.status(400).json({ error: 'Los datos enviados son inválidos o están incompletos' });
     }

@@ -214,3 +214,35 @@ export const crearOrden = async ({
         client.release();
     }
 };
+
+export const finalizarOrden = async (id) => {
+    const actual = await pool.query('SELECT id, estado FROM ordenes WHERE id = $1', [id]);
+
+    if (actual.rows.length === 0) {
+        return { orden: null, motivo: 'no_encontrada' };
+    }
+
+    const estado = actual.rows[0].estado;
+
+    if (estado === 'finalizada') {
+        return { orden: null, motivo: 'ya_finalizada' };
+    }
+
+    if (estado === 'anulada') {
+        return { orden: null, motivo: 'anulada' };
+    }
+
+    const result = await pool.query(
+        `UPDATE ordenes
+         SET estado = 'finalizada', finalizada_en = NOW()
+         WHERE id = $1 AND estado IN ('abierta', 'en_proceso')
+         RETURNING *`,
+        [id]
+    );
+
+    if (result.rows.length === 0) {
+        return { orden: null, motivo: 'no_actualizada' };
+    }
+
+    return { orden: result.rows[0], motivo: null };
+};

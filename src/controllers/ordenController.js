@@ -58,3 +58,32 @@ export const crearOrden = async (req, res) => {
         return res.status(400).json({ error: error.message || 'Error al procesar la orden transaccional.' });
     }
 };
+
+export const finalizarOrden = async (req, res) => {
+    try {
+        const resultado = await ordenService.finalizarOrden(req.params.id);
+
+        if (resultado.motivo === 'no_encontrada') {
+            return res.status(404).json({ error: 'Orden no encontrada.' });
+        }
+
+        if (resultado.motivo === 'ya_finalizada') {
+            return res.status(400).json({ error: 'La orden ya está finalizada y no se puede modificar.' });
+        }
+
+        if (resultado.motivo === 'anulada') {
+            return res.status(400).json({ error: 'No se puede finalizar una orden anulada.' });
+        }
+
+        if (!resultado.orden) {
+            return res.status(400).json({ error: 'No se pudo finalizar la orden.' });
+        }
+
+        return res.json({
+            mensaje: 'Orden finalizada exitosamente.',
+            orden: resultado.orden
+        });
+    } catch (error) {
+        return responderErrorBd(res, error, 'Error al finalizar la orden.');
+    }
+};
